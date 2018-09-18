@@ -1,6 +1,7 @@
 var http = require('http');//調用http函式庫
 var mysql = require("mysql");//資料庫插件
 var io = require('socket.io'); //加入 Socket.IO
+var CryptoJS = require('crypto-js')//加入 crypto-js
 
 //建立一個伺服器連結
 var server = http.createServer(function(request, response){
@@ -13,10 +14,11 @@ var serv_io = io.listen(server);// 開啟 Socket.IO 的 listener
 
 //資料庫連結物件
 var connection = mysql.createConnection({
-  host: "192.168.30.118",
-  user: "root",
-  password: "passwords",
-  database: "git",
+  host: "192.168.30.117",
+  port:3306,
+  user: "test",
+  password: "tt",
+  database: "apidb",
 });
 
 //連接資料庫
@@ -36,10 +38,23 @@ serv_io.sockets.on('connection', function(socket) {
   })
   
   var playerData = {};//存放玩家資料用
+  var CryptoStrKey = '632933d6fdd2e508';
 
   //註冊
   socket.on('regs',function(regData) {
+
+    let key = CryptoJS.enc.Utf8.parse(CryptoStrKey);
+    //將regData由 密文字串→轉hex資料→轉為Base64字串
+    var encryptedBase64Str = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Hex.parse(regData));
+    // 解密
+    var decryptedData = CryptoJS.AES.decrypt(encryptedBase64Str, key, {
+      mode: CryptoJS.mode.ECB,
+      padding: CryptoJS.pad.Pkcs7
+    });
+    var regData = JSON.parse(decryptedData.toString(CryptoJS.enc.Utf8));
+
     console.log("task : "+regData.task);
+    console.log();
 
     let today = new Date();
     //查詢是否重複

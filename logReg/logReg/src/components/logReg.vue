@@ -58,12 +58,13 @@
 </template>
 
 <script>
-
+var CryptoJS = require("crypto-js");
 export default {
   name: 'logReg',
   props:['socket'],
   data () {
     return {
+      keyStr:'632933d6fdd2e508',//加密用字串
       loginData:{//登入資料
         task:"",
         name:"",
@@ -175,8 +176,13 @@ export default {
     regs(){
       this.registerData.task = "regs";
       if(this.check(this.registerData)){
+        //加密
+        var encryptedData = CryptoJS.AES.encrypt(JSON.stringify(this.registerData), CryptoJS.enc.Utf8.parse(this.keyStr), {
+            mode: CryptoJS.mode.ECB,
+            padding: CryptoJS.pad.Pkcs7
+        });
         //至server處理
-        this.socket.emit('regs',this.registerData);
+        this.socket.emit('regs',encryptedData.ciphertext.toString());
       } else {
         alert("ERROR");
       }
